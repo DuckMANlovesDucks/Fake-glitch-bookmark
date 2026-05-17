@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GLITCH.EXE — Bookmarklet Installer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #00ff88;
+    --red: #ff003c;
+    --cyan: #00eeff;
+    --bg: #060608;
+    --panel: #0d0f14;
+    --border: #1a2030;
+  }
+
+  body {
+    background: var(--bg);
+    color: #c8d4e8;
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 20px 80px;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px, rgba(0,0,255,0.015) 2px, rgba(0,0,255,0.015) 3px);
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 52px;
+  }
+
+  .logo {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(32px, 8vw, 64px);
+    font-weight: 700;
+    color: var(--red);
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 30px rgba(255,0,60,0.6), 0 0 60px rgba(255,0,60,0.2);
+    animation: flicker 4s infinite;
+    line-height: 1;
+  }
+
+  .logo span { color: var(--cyan); text-shadow: 0 0 30px rgba(0,238,255,0.6); }
+
+  @keyframes flicker {
+    0%,95%,100% { opacity: 1; }
+    96% { opacity: 0.3; }
+    97% { opacity: 1; }
+    98% { opacity: 0.1; }
+    99% { opacity: 1; }
+  }
+
+  .tagline {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #4a5a70;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+
+  .version {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--green);
+    border: 1px solid var(--green);
+    padding: 2px 10px;
+    letter-spacing: 0.2em;
+  }
+
+  /* ─── MAIN CARD ─── */
+  .card {
+    width: 100%;
+    max-width: 680px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 36px 40px;
+    margin-bottom: 24px;
+    position: relative;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--red), var(--cyan), var(--green));
+  }
+
+  .card-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: #3a4a60;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  /* ─── DRAG BUTTON ─── */
+  .drag-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 32px 20px;
+    border: 1px dashed #2a3a55;
+    margin-bottom: 28px;
+    background: rgba(0,0,0,0.3);
+  }
+
+  .drag-label {
+    font-size: 11px;
+    color: #3a4a60;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+
+  .bookmark-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    background: var(--red);
+    color: #fff;
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.15em;
+    text-decoration: none;
+    border: none;
+    cursor: grab;
+    user-select: none;
+    box-shadow: 0 0 30px rgba(255,0,60,0.4), 0 0 60px rgba(255,0,60,0.1);
+    transition: box-shadow 0.2s, transform 0.1s;
+    animation: pulse-btn 2s infinite;
+  }
+
+  @keyframes pulse-btn {
+    0%,100% { box-shadow: 0 0 30px rgba(255,0,60,0.4), 0 0 60px rgba(255,0,60,0.1); }
+    50% { box-shadow: 0 0 50px rgba(255,0,60,0.7), 0 0 100px rgba(255,0,60,0.2); }
+  }
+
+  .bookmark-btn:hover { transform: scale(1.04); }
+  .bookmark-btn:active { transform: scale(0.97); cursor: grabbing; }
+
+  .bookmark-icon { font-size: 18px; }
+
+  .drag-hint {
+    font-size: 11px;
+    color: #2a3a50;
+    text-align: center;
+  }
+
+  /* ─── INSTRUCTIONS ─── */
+  .steps {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .steps li {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    font-size: 13px;
+    color: #8a9ab5;
+    line-height: 1.5;
+  }
+
+  .step-num {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-family: 'Orbitron', monospace;
+    margin-top: 1px;
+  }
+
+  /* ─── COPY SECTION ─── */
+  .copy-section { margin-bottom: 4px; }
+
+  .copy-label {
+    font-size: 11px;
+    color: #3a4a60;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .copy-box {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+  }
+
+  .copy-code {
+    flex: 1;
+    background: #000;
+    color: #2a6a3a;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    padding: 10px 14px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    border: none;
+    outline: none;
+    cursor: text;
+    user-select: all;
+  }
+
+  .copy-btn {
+    background: #0d1520;
+    color: var(--cyan);
+    border: none;
+    border-left: 1px solid var(--border);
+    padding: 10px 18px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
+  }
+
+  .copy-btn:hover { background: rgba(0,238,255,0.1); }
+  .copy-btn.copied { color: var(--green); }
+
+  /* ─── FEATURES ─── */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .feat {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .feat-icon { font-size: 20px; flex-shrink: 0; }
+
+  .feat-title {
+    font-size: 12px;
+    color: var(--cyan);
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+
+  .feat-desc { font-size: 11px; color: #4a5a70; line-height: 1.5; }
+
+  /* ─── CONTROLS ─── */
+  .controls-bar {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 0;
+    padding: 16px 0 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .key-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #6a7a90;
+  }
+
+  .key {
+    background: #0d1520;
+    border: 1px solid #2a3a55;
+    padding: 3px 10px;
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    color: #8a9ab5;
+  }
+
+  footer {
+    margin-top: 48px;
+    font-size: 10px;
+    color: #1e2a3a;
+    letter-spacing: 0.2em;
+    text-align: center;
+  }
+
+  /* glitchy underline on hover */
+  .bookmark-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.05) 50%,transparent 100%);
+    pointer-events: none;
+  }
+
+  @media (max-width: 480px) {
+    .card { padding: 24px 20px; }
+    .features-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">GLITCH<span>.EXE</span></div>
+  <div class="tagline">Browser Chaos Bookmarklet</div>
+  <div class="version">v2.0 — UPGRADED</div>
+</div>
+
+<div class="card">
+  <div class="card-title">// install</div>
+
+  <div class="drag-zone">
+    <div class="drag-label">↑ drag to bookmarks bar ↑</div>
+    <a class="bookmark-btn" id="bookmarklet" href="#PLACEHOLDER">
+      <span class="bookmark-icon">⚡</span> GLITCH.EXE
+    </a>
+    <div class="drag-hint">Or right-click → bookmark this link</div>
+  </div>
+
+  <ol class="steps">
+    <li>
+      <span class="step-num">1</span>
+      Make sure your bookmarks bar is visible — <strong style="color:#8a9ab5">Ctrl+Shift+B</strong> (Windows/Linux) or <strong style="color:#8a9ab5">Cmd+Shift+B</strong> (Mac)
+    </li>
+    <li>
+      <span class="step-num">2</span>
+      Drag the red button above directly into your bookmarks bar
+    </li>
+    <li>
+      <span class="step-num">3</span>
+      Navigate to any website, then click the bookmark to activate
+    </li>
+    <li>
+      <span class="step-num">4</span>
+      Click again or press <strong style="color:#8a9ab5">ESC</strong> to stop
+    </li>
+  </ol>
+
+  <div class="copy-section">
+    <div class="copy-label">// or copy the raw code</div>
+    <div class="copy-box">
+      <input class="copy-code" id="codeInput" type="text" readonly value="Loading..." />
+      <button class="copy-btn" id="copyBtn" onclick="copyCode()">COPY</button>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">// new in v2.0</div>
+  <div class="features-grid">
+    <div class="feat">
+      <div class="feat-icon">🎵</div>
+      <div>
+        <div class="feat-title">UPGRADED AUDIO</div>
+        <div class="feat-desc">3 oscillator types + white noise + random zap sweeps. Fixed original's silent noise buffer bug.</div>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">📺</div>
+      <div>
+        <div class="feat-title">CRT SCANLINES</div>
+        <div class="feat-desc">Proper repeating scanline overlay for that real CRT monitor feel.</div>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🌀</div>
+      <div>
+        <div class="feat-title">SCREEN SHAKE</div>
+        <div class="feat-desc">Added CSS translate shake animation layered on top of the color distortion.</div>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">💥</div>
+      <div>
+        <div class="feat-title">CLICK BURSTS</div>
+        <div class="feat-desc">Click anywhere on the page to trigger an extra burst of chaos + double audio hit.</div>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">💾</div>
+      <div>
+        <div class="feat-title">HEX DUMPS</div>
+        <div class="feat-desc">Random hex dump blocks appear mid-screen like a real kernel crash readout.</div>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🔴</div>
+      <div>
+        <div class="feat-title">MORE ERRORS</div>
+        <div class="feat-desc">20 error types including real BSOD stop codes with random memory addresses.</div>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🎨</div>
+      <div>
+        <div class="feat-title">BLEND MODES</div>
+        <div class="feat-desc">5 different CSS mix-blend-modes randomized per glitch element for wilder interactions.</div>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🐛</div>
+      <div>
+        <div class="feat-title">BUG FIXES</div>
+        <div class="feat-desc">Original had a bitshift operator bug (<code style="color:#0f0">i &lt;&lt; n</code>) that killed all loops. All fixed.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls-bar">
+    <div class="key-badge">
+      <span class="key">CLICK BOOKMARK</span>
+      <span>toggle on/off</span>
+    </div>
+    <div class="key-badge">
+      <span class="key">ESC</span>
+      <span>emergency stop</span>
+    </div>
+    <div class="key-badge">
+      <span class="key">CLICK PAGE</span>
+      <span>burst effect</span>
+    </div>
+  </div>
+</div>
+
+<footer>GLITCH.EXE v2.0 — FOR ENTERTAINMENT PURPOSES ONLY — ESC TO ESCAPE REALITY</footer>
+
+<script>
+const code = `javascript:(function(){if(window.__g){clearInterval(window.__gI);window.__gA&&window.__gA.suspend();document.documentElement.classList.remove('x');document.body.classList.remove('x');window.__gT.forEach(t=>t.remove());[window.__gS,window.__gY,window.__gCA].forEach(e=>e&&e.remove());document.body.style.cursor='';window.__g=0;return}window.__g=1;const A=new(window.AudioContext||window.webkitAudioContext)();window.__gA=A;function snd(){const len=~~(A.sampleRate*.1),b=A.createBuffer(1,len,A.sampleRate),d=b.getChannelData(0);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*.7;const s=A.createBufferSource();s.buffer=b;const g=A.createGain();g.gain.value=.4;s.connect(g);g.connect(A.destination);s.start();const tp=['sawtooth','square','triangle'],o=A.createOscillator();o.type=tp[Math.random()*3|0];o.frequency.value=60+Math.random()*1400;const og=A.createGain();og.gain.setValueAtTime(.3,A.currentTime);og.gain.exponentialRampToValueAtTime(.001,A.currentTime+.1);o.connect(og);og.connect(A.destination);o.start();o.stop(A.currentTime+.1);const q=A.createOscillator();q.type='sine';q.frequency.value=30+Math.random()*50;const qg=A.createGain();qg.gain.setValueAtTime(.4,A.currentTime);qg.gain.exponentialRampToValueAtTime(.001,A.currentTime+.15);q.connect(qg);qg.connect(A.destination);q.start();q.stop(A.currentTime+.15);if(Math.random()>.5){const z=A.createOscillator();z.type='square';z.frequency.setValueAtTime(2000+Math.random()*6000,A.currentTime);z.frequency.exponentialRampToValueAtTime(200,A.currentTime+.05);const zg=A.createGain();zg.gain.setValueAtTime(.15,A.currentTime);zg.gain.exponentialRampToValueAtTime(.001,A.currentTime+.05);z.connect(zg);zg.connect(A.destination);z.start();z.stop(A.currentTime+.05)}}const cols=[[255,0,255],[0,255,255],[255,255,0],[255,0,0],[0,255,0],[0,128,255],[255,128,0],[255,255,255],[255,0,128],[128,0,255],[0,255,128]];const msgs=['CRITICAL_PROCESS_DIED','SYSTEM_FAILURE','MEMORY_MANAGEMENT','VIRUS_DETECTED','DATA_CORRUPTION','FATAL_ERROR','SYSTEM_BREACH','HARDWARE_FAILURE','KERNEL_PANIC','EXCEPTION_UNHANDLED','IRQL_NOT_LESS_OR_EQUAL','PAGE_FAULT_IN_NONPAGED_AREA','SYSTEM_THREAD_EXCEPTION','KMODE_EXCEPTION_NOT_HANDLED','DPC_WATCHDOG_VIOLATION','REGISTRY_ERROR','CORRUPTED_FILE_SYSTEM','ACCESS_VIOLATION','HEAP_CORRUPTION','BAD_POOL_HEADER'];function rH(n){let s='';for(let i=0;i<n;i++)s+=(Math.random()*16|0).toString(16).toUpperCase();return s}const y=document.createElement('style');y.textContent='@keyframes st{0%,100%{filter:brightness(1)}10%{filter:brightness(4) invert(1) hue-rotate(90deg)}20%{filter:brightness(.1) hue-rotate(200deg) saturate(20)}30%{filter:brightness(5) saturate(8) contrast(3)}40%{filter:brightness(.2) hue-rotate(120deg) invert(.5)}50%{filter:brightness(6) contrast(4) saturate(15)}60%{filter:brightness(.3) invert(.6) hue-rotate(45deg)}70%{filter:brightness(3) hue-rotate(300deg) saturate(10)}80%{filter:brightness(.1) contrast(8)}90%{filter:brightness(7) saturate(12) hue-rotate(180deg)}}@keyframes sk{0%,100%{transform:translate(0,0)}10%{transform:translate(-3px,2px)}20%{transform:translate(4px,-3px)}30%{transform:translate(-5px,4px)}40%{transform:translate(3px,-2px)}50%{transform:translate(-4px,5px)}60%{transform:translate(5px,-4px)}70%{transform:translate(-2px,3px)}80%{transform:translate(4px,-5px)}90%{transform:translate(-3px,2px)}}@keyframes fl{0%,100%{opacity:1}50%{opacity:.1}}@keyframes pop{0%{transform:scale(0) rotate(-10deg);opacity:0}20%{transform:scale(1.15) rotate(5deg);opacity:1}80%{transform:scale(1);opacity:1}100%{transform:scale(0) rotate(10deg);opacity:0}}.x{animation:st .07s infinite,sk .08s infinite!important}';document.head.appendChild(y);window.__gY=y;document.documentElement.classList.add('x');document.body.classList.add('x');document.body.style.cursor='crosshair';const sc=document.createElement('div');sc.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2147483647;background:repeating-linear-gradient(0deg,rgba(0,0,0,.12) 0,rgba(0,0,0,.12) 1px,transparent 1px,transparent 3px);animation:fl .05s infinite';document.body.appendChild(sc);window.__gS=sc;const ca=document.createElement('div');ca.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2147483646';document.body.appendChild(ca);window.__gCA=ca;window.__gT=[];function burst(e){if(!window.__g){document.removeEventListener('click',burst);return}snd();snd();for(let i=0;i<6;i++){const f=document.createElement('div');f.style.cssText='position:fixed;pointer-events:none;z-index:2147483640;border-radius:50%;background:rgba(255,255,255,.9);mix-blend-mode:overlay;left:'+(e.clientX-50)+'px;top:'+(e.clientY-50)+'px;width:100px;height:100px;transform:scale('+(Math.random()*3+1)+');opacity:'+Math.random();document.body.appendChild(f);setTimeout(()=>f.remove(),180)}}document.addEventListener('click',burst);const BM=['overlay','screen','difference','exclusion','multiply'];window.__gI=setInterval(()=>{snd();window.__gT.forEach(t=>t.remove());window.__gT=[];for(let i=0;i<10;i++){const t=document.createElement('div'),c=cols[Math.random()*cols.length|0];t.style.cssText='position:fixed;pointer-events:none;z-index:2147483645;height:'+(Math.random()*30+1)+'px;top:'+(Math.random()*100)+'vh;left:'+(Math.random()*40-20)+'vw;width:'+(Math.random()*60+20)+'vw;background:rgba('+c[0]+','+c[1]+','+c[2]+','+(Math.random()*.7+.3)+');transform:translateX('+(Math.random()*60-30)+'px) skewX('+(Math.random()*40-20)+'deg);mix-blend-mode:'+BM[Math.random()*BM.length|0];document.body.appendChild(t);window.__gT.push(t)}for(let i=0;i<12;i++){const b=document.createElement('div'),c=cols[Math.random()*cols.length|0];b.style.cssText='position:fixed;pointer-events:none;z-index:2147483644;left:'+(Math.random()*90)+'vw;top:'+(Math.random()*90)+'vh;width:'+(Math.random()*250+30)+'px;height:'+(Math.random()*180+20)+'px;background:rgba('+c[0]+','+c[1]+','+c[2]+','+(Math.random()*.5+.15)+');mix-blend-mode:'+BM[Math.random()*BM.length|0];document.body.appendChild(b);window.__gT.push(b)}for(let i=0;i<25;i++){const p=document.createElement('div'),c=cols[Math.random()*cols.length|0];p.style.cssText='position:fixed;pointer-events:none;z-index:2147483643;left:'+(Math.random()*100)+'vw;top:'+(Math.random()*100)+'vh;width:'+(Math.random()*200+10)+'px;height:'+(Math.random()*8+1)+'px;background:rgb('+c[0]+','+c[1]+','+c[2]+');opacity:'+(Math.random()*.9+.1);document.body.appendChild(p);window.__gT.push(p)}for(let i=0;i<4;i++){const tx=document.createElement('div'),c=cols[Math.random()*cols.length|0],hex=Math.random()>.5;tx.style.cssText='position:fixed;pointer-events:none;z-index:2147483642;font-family:Consolas,monospace;font-weight:bold;font-size:'+(Math.random()*14+10)+'px;padding:5px 10px;border:2px solid #f00;box-shadow:0 0 20px rgba(255,0,0,.8);white-space:nowrap;animation:pop .5s ease-in-out forwards;left:'+(Math.random()*60+10)+'vw;top:'+(Math.random()*65+10)+'vh;color:rgb('+c[0]+','+c[1]+','+c[2]+');background:rgba(0,0,0,.9)';tx.innerText=(hex?'0x'+rH(8)+': ':'')+msgs[Math.random()*msgs.length|0];document.body.appendChild(tx);setTimeout(()=>tx.remove(),500)}if(Math.random()>.6){const st=document.createElement('div');let ln='';for(let r=0;r<6;r++)ln+=rH(32)+'\n';st.style.cssText='position:fixed;pointer-events:none;z-index:2147483641;font-family:Consolas,monospace;font-size:9px;color:#0f0;background:rgba(0,0,0,.85);padding:4px 8px;white-space:pre;left:'+(Math.random()*70)+'vw;top:'+(Math.random()*70)+'vh;border:1px solid #0f0;box-shadow:0 0 10px rgba(0,255,0,.5);animation:fl .1s infinite';st.innerText=ln;document.body.appendChild(st);window.__gT.push(st)}},100);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&window.__g){clearInterval(window.__gI);window.__gA&&window.__gA.suspend();document.documentElement.classList.remove('x');document.body.classList.remove('x');window.__gT.forEach(t=>t.remove());[window.__gS,window.__gY,window.__gCA].forEach(el=>el&&el.remove());document.body.style.cursor='';window.__g=0}})})();`;
+
+document.getElementById('bookmarklet').href = code;
+document.getElementById('codeInput').value = code;
+
+function copyCode() {
+  const input = document.getElementById('codeInput');
+  const btn = document.getElementById('copyBtn');
+  navigator.clipboard.writeText(input.value).then(() => {
+    btn.textContent = 'COPIED!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => {
+    input.select();
+    document.execCommand('copy');
+    btn.textContent = 'COPIED!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
+</body>
+</html>
